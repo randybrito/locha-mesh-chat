@@ -2,9 +2,7 @@ import React, { Component } from "react";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
-  AsyncStorage,
-  Image
+  NativeModules
 } from "react-native";
 import { Button, Text, Thumbnail } from "native-base";
 import { setInitialUser, createNewAccount, restoreWithPhrase, restoreWithFile } from "../../store/aplication/aplicationAction";
@@ -13,6 +11,9 @@ import crypto from "crypto";
 import Mnemonic from "bitcore-mnemonic";
 import { images } from "../../utils/constans";
 import CreateAccount from "./CreateAccount";
+
+
+const service = NativeModules.AppService
 
 /**
  *
@@ -33,6 +34,17 @@ class InitialStep extends Component {
     };
   }
 
+
+  componentDidMount = () => {
+    this.getNetWorkState()
+  }
+
+
+  getNetWorkState = () => {
+    service.checkConnectionStatus((networkName, isConnected) => {
+      console.log(networkName, isConnected)
+    })
+  }
   close = step => {
     this.setState({ open: false, restore: false });
   };
@@ -49,6 +61,9 @@ class InitialStep extends Component {
     const array = ['', '', '', '', '', '', '', '', '', '', '', '']
     this.setState({ open: true, restore: true, phrases: array })
   }
+
+
+
 
   render() {
     const { screenProps } = this.props;
