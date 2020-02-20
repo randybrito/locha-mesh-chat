@@ -15,7 +15,6 @@ import { connect } from 'react-redux';
 import { closeMenu } from '../store/aplication/aplicationAction';
 import { images } from '../utils/constans';
 import NavigationService from '../utils/navigationService';
-
 /**
  * view of the menu drawer
  * @class HeaderComponent
@@ -26,6 +25,30 @@ class DrawerComponent extends Component {
   handleChange = (view) => {
     NavigationService.navigate(view);
   };
+
+
+  // scanDevice = () => {
+  //   const data = require('react-native-ble-plx');
+  //   const { State, BleManager, Device } = data;
+
+  //   const bleManager = new BleManager();
+
+  //   // bleManager.startDeviceScan(null, null, (error, scannedDevice) => {
+  //   //   console.log(error, scannedDevice);
+  //   // });
+
+  //   bleManager.connectToDevice('BC:DD:C2:D1:B6:1A', null).then(async (device) => {
+  //     await device.discoverAllServicesAndCharacteristics();
+  //     const services = await device.services();
+  //     services.forEach(async (service) => {
+  //       const characteristics = await service.characteristics();
+  //       characteristics.forEach(async (data) => {
+  //         const readCharacteristics = await data.read();
+  //         console.log(readCharacteristics);
+  //       });
+  //     });
+  //   });
+  // }
 
   render() {
     const { screenProps } = this.props;
@@ -76,10 +99,21 @@ class DrawerComponent extends Component {
               <Text>{screenProps.t('Drawer:setting')}</Text>
             </Body>
           </ListItem>
+
+          <ListItem icon button onPress={() => this.handleChange('ble')}>
+            <Left>
+              <Button style={{ backgroundColor: '#ef6c00' }}>
+                <Icon active name="bluetooth" />
+              </Button>
+            </Left>
+            <Body>
+              <Text>Pair with physical device</Text>
+            </Body>
+          </ListItem>
         </View>
         <View style={{ height: 60, alignItems: 'center', justifyContent: 'center' }}>
           <Text>
-            { `Version ${NativeModules.RNDeviceInfo.VersionInfo}`}
+            {`Version ${NativeModules.RNDeviceInfo.VersionInfo}`}
           </Text>
         </View>
       </Container>
