@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, NativeModules } from 'react-native';
 import ScanDevices from './ScanDevices';
+
+const bleModule = NativeModules.RNbleModule;
 
 export default class index extends Component {
   constructor(props) {
@@ -16,6 +18,11 @@ export default class index extends Component {
   };
 
   render() {
+    bleModule.activateBle().then((res) => {
+      console.log("Aqui", res);
+    }).catch(err =>{
+      console.log(err)
+    })
     return (
       <View>
         <ScanDevices {...this.props} />

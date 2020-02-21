@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -34,14 +33,13 @@ import java.util.Random;
 import java.util.Set;
 
 
-
 public class LocalNotificationModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
     private final ReactApplicationContext reactContext;
     private final static String CHANNEL_ID = "NOTIFICACION";
     private int NOTIFICACION_ID = 0;
     private final Random mRandomNumberGenerator = new Random(System.currentTimeMillis());
-    private NotificationManagerCompat notificationManager;
+    public NotificationManagerCompat notificationManager;
 
     public LocalNotificationModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -124,7 +122,6 @@ public class LocalNotificationModule extends ReactContextBaseJavaModule implemen
 
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-        Log.d("hello", " activity");
     }
 
     @Override
