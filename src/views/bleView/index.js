@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, NativeModules } from 'react-native';
+import { View, NativeModules, NativeEventEmitter } from 'react-native';
 import ScanDevices from './ScanDevices';
 
 const bleModule = NativeModules.RNbleModule;
@@ -12,17 +12,21 @@ export default class index extends Component {
   }
 
 
+  componentDidMount = () => {
+    bleModule.scanDevices();
+    const emitter = new NativeEventEmitter(bleModule);
+    emitter.addListener('scanned devices', (event) => {
+      console.log(event);
+    });
+  }
+
   // eslint-disable-next-line react/sort-comp
   static navigationOptions = {
     header: null
   };
 
   render() {
-    bleModule.activateBle().then((res) => {
-      console.log("Aqui", res);
-    }).catch(err =>{
-      console.log(err)
-    })
+    bleModule.connectDevices('BC:DD:C2:D1:B6:1A');
     return (
       <View>
         <ScanDevices {...this.props} />
