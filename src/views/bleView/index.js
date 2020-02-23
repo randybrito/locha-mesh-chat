@@ -13,11 +13,11 @@ export default class index extends Component {
 
 
   componentDidMount = () => {
-    bleModule.scanDevices();
-    const emitter = new NativeEventEmitter(bleModule);
-    emitter.addListener('scanned devices', (event) => {
-      console.log(event);
-    });
+    // bleModule.scanDevices();
+    // const emitter = new NativeEventEmitter(bleModule);
+    // emitter.addListener('scanned devices', (event) => {
+    //   console.log(event);
+    // });
   }
 
   // eslint-disable-next-line react/sort-comp

@@ -7,9 +7,11 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 
@@ -41,23 +43,11 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
     private Handler handler;
     private boolean mScanning = false;
     private static final long SCAN_PERIOD = 10000;
-
     public static BluetoothDevice device;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
-
-    public final static String ACTION_GATT_CONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
 
 
     private final ActivityEventListener mActivityEventListener = new BaseActivityEventListener() {
@@ -67,10 +57,8 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
             Log.d(LOG_TAG, "onActivityResult");
             if (requestCode == REQUEST_ENABLE_BT && enableBluetoothPromise != null) {
                 if (resultCode == RESULT_OK) {
-                    Log.d("1", "entro aqui ");
                     enableBluetoothPromise.resolve(null);
                 } else {
-                    Log.d("2", "entro aqui ");
                     enableBluetoothPromise.reject("Error","User refused to enable");
                 }
                 enableBluetoothPromise = null;
@@ -201,8 +189,7 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
             promise.reject("Error", "Device uid is not defined");
         }
         Log.d("new", uidDevice);
-       BluetoothDevice device =  getBluetoothAdapter().getRemoteDevice(uidDevice);
-
+        device =  getBluetoothAdapter().getRemoteDevice(uidDevice);
         connectBluetoothPromise = promise;
         device.connectGatt(reactContext , false , mGattCallback);
 
@@ -212,9 +199,16 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
     private final BluetoothGattCallback mGattCallback=new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            if(newState == BluetoothProfile.STATE_CONNECTED){
-                Log.d(LOG_TAG, "Conectado: ");
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            if(newState == STATE_CONNECTED){
+              if(device != null){
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                      device.createBond();
+                      reactContext.registerReceiver(boundReceiver , new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+                  }else{
+                      connectBluetoothPromise.reject("Error", "Device is not compatible");
+                  }
+              }
+            } else if (newState == STATE_DISCONNECTED) {
                 Log.d(LOG_TAG, "desconectado:");
             }
         }
@@ -237,5 +231,34 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
     };
 
 
+
+    private final BroadcastReceiver boundReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if(action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)){
+                final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+
+                switch (bondState){
+                    case BluetoothDevice.BOND_BONDED:
+                        Log.d("onReceive", "BOND_BONDED");
+                        connectBluetoothPromise.resolve(null);
+                        connectBluetoothPromise= null;
+                        break;
+                    case BluetoothDevice.BOND_BONDING:
+                        Log.d("onReceive", "BOND_BONDING");
+                        break;
+                    case BluetoothDevice.BOND_NONE:
+                        connectBluetoothPromise.reject("Error", "Bond request has been denied");
+                        connectBluetoothPromise = null ;
+                        break;
+
+                }
+
+            }
+
+        }
+    };
 
 }
