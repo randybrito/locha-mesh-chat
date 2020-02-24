@@ -26,7 +26,9 @@ export default class index extends Component {
   };
 
   render() {
-    bleModule.connectDevices('BC:DD:C2:D1:B6:1A');
+    bleModule.connectDevices('BC:DD:C2:D1:B6:1A').then(() => {
+      bleModule.readServices();
+    });
     return (
       <View>
         <ScanDevices {...this.props} />

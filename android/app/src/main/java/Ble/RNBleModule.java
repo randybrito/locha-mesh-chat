@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,6 +25,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -44,6 +47,9 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
     private boolean mScanning = false;
     private static final long SCAN_PERIOD = 10000;
     public static BluetoothDevice device;
+    private BluetoothGatt _gatt;
+
+    public List<WritableMap> mapCharacterist;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -195,6 +201,16 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
 
     }
 
+    @ReactMethod
+    public void readServices (Promise promise){
+        if(getBluetoothAdapter().isEnabled() && _gatt != null ){
+            _gatt.discoverServices();
+        }else if (_gatt == null ) {
+            promise.reject("Error " , "Device is not connected");
+        }else {
+            promise.reject("Error " , "Bluetooth is not activated");
+        }
+    }
 
     private final BluetoothGattCallback mGattCallback=new BluetoothGattCallback() {
         @Override
@@ -204,6 +220,7 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                       device.createBond();
                       reactContext.registerReceiver(boundReceiver , new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+                      _gatt = gatt;
                   }else{
                       connectBluetoothPromise.reject("Error", "Device is not compatible");
                   }
@@ -215,13 +232,44 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d("onServicesDiscovered", "execute here: ");
+            Log.d("onServicesDiscovered", "execute here:" + gatt.getServices());
+
+            List<BluetoothGattService> services = gatt.getServices();
+            for (BluetoothGattService gattService : services){
+                Log.d(LOG_TAG, "onServicesDiscovered: " + gattService.getUuid());
+            }
+
+            BluetoothGattService secondService =  services.get(1);
+
+             List<BluetoothGattCharacteristic> listCharacteristic = secondService.getCharacteristics();
+
+            Log.d("list", "onServicesDiscovered: " +listCharacteristic.size());
+             for (BluetoothGattCharacteristic characteristic : listCharacteristic){
+                 Log.d("!!!!!!!!!!!!Prueba", "onServicesDiscovered: " + characteristic.getPermissions() );
+             }
+
+             gatt.readCharacteristic(listCharacteristic.get(0));
+
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Log.d("onCharacteristicRead", "execute here: ");
 
+          byte[] bytes = characteristic.getValue();
+          WritableMap mapChateristic = Arguments.createMap();
+                String value = new String(bytes);
+
+            Log.d("getProperties", "onCharacteristicRead: " +characteristic.getProperties());
+
+                mapChateristic.putString("value", value);
+                mapChateristic.putString("uid", characteristic.getUuid().toString());
+                mapChateristic.putString("uidService", characteristic.getService().getUuid().toString() );
+                mapChateristic.putBoolean("writte", characteristic.getProperties() == (BluetoothGattCharacteristic.PERMISSION_WRITE) );
+                mapChateristic.putBoolean("readEncrypted", characteristic.getProperties() == (BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED));
+                mapChateristic.putBoolean("read", (BluetoothGattCharacteristic.PERMISSION_READ) == characteristic.getProperties());
+
+
+            mapCharacterist.add(mapChateristic);
         }
 
         @Override
@@ -229,7 +277,6 @@ public class RNBleModule  extends ReactContextBaseJavaModule  {
             Log.d("onCharacteristicChanged", "execute here: ");
         }
     };
-
 
 
     private final BroadcastReceiver boundReceiver = new BroadcastReceiver() {
