@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import {
-  View, Text, ActivityIndicator, StyleSheet
+  View, Text, ActivityIndicator, StyleSheet, NativeModules, NativeEventEmitter
 } from 'react-native';
 import {
   ListItem, Left, Icon, Button, Body, Right,
 } from 'native-base';
 import { BleManager } from 'react-native-ble-plx';
 import Header from '../../components/Header';
-import { toast } from '../../utils/utils';
 
-const bleManager = new BleManager();
+//const bleManager = new BleManager();
+
+const bleModule = NativeModules.RNbleModule;
 
 export default class ScanDevices extends Component {
   constructor(props) {
@@ -19,8 +20,10 @@ export default class ScanDevices extends Component {
     };
   }
 
+
   // componentDidMount = () => {
   //   bleManager.startDeviceScan(null, null, (err, newDevice) => {
+  
   //     if (err) {
   //       // eslint-disable-next-line no-console
   //       console.log(err);
@@ -39,6 +42,33 @@ export default class ScanDevices extends Component {
   //     }
   //   });
   // }
+
+
+  componentDidMount = () => {
+    console.log("execute");
+    this.scanDevices()
+    console.log("execute2312312");
+    const emitter = new NativeEventEmitter(NativeModules.RNbleModule);
+    emitter.addListener('scannedDevices', (newDevice) => {
+      console.warn("plist", newDevice);
+      // if (this.state.devices.length === 0) {
+      //   this.setState({ devices: this.state.devices.concat(newDevice) });
+      // } else {
+      //   this.state.devices.forEach((device) => {
+      //     if (device.id !== newDevice.id) {
+      //       this.setState({
+      //         devices: this.state.devices.concat(newDevice)
+      //       });
+      //     }
+      //   });
+      // }
+    });
+  }
+
+
+  scanDevices = () => {
+    bleModule.scanDevices();
+  }
 
   // connectWithTheDevice = (device) => {
   //   bleManager.isDeviceConnected(device.id).then((res) => {

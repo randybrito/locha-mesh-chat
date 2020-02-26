@@ -8,16 +8,21 @@ export default class index extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isActive: false
     };
   }
 
 
   componentDidMount = () => {
-    // bleModule.scanDevices();
-    // const emitter = new NativeEventEmitter(bleModule);
-    // emitter.addListener('scanned devices', (event) => {
-    //   console.log(event);
-    // });
+    bleModule.isActive().then((activate) => {
+      if (!activate) {
+        bleModule.activateBle().then(() => {
+          this.setState({ isActive: true });
+        });
+      } else {
+        this.setState({ isActive: true });
+      }
+    });
   }
 
   // eslint-disable-next-line react/sort-comp
@@ -26,12 +31,10 @@ export default class index extends Component {
   };
 
   render() {
-    bleModule.connectDevices('BC:DD:C2:D1:B6:1A').then(() => {
-      bleModule.readServices();
-    });
     return (
       <View>
-        <ScanDevices {...this.props} />
+        {this.state.isActive
+          && <ScanDevices {...this.props} />}
       </View>
     );
   }

@@ -166,12 +166,12 @@ export default class Socket {
     this.socket.onerror = (e) => {
       // a message was received
       // eslint-disable-next-line no-console
-      console.log('OnError', e);
+      // console.log('OnError', e);
     };
 
     this.socket.onclose = (e) => {
       // eslint-disable-next-line no-console
-      console.log('close', e);
+      // console.log('close', e);
       this.connectionRetry();
     };
   };
